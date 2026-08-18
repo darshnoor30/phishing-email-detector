@@ -1,0 +1,23 @@
+[project]
+name = "explainable-phishing-email-detector"
+version = "1.0.0"
+description = "Offline, explainable rule-based phishing email triage"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Darsh Noor" }]
+
+[tool.pytest.ini_options]
+addopts = "--cov=phishing_detector --cov=main --cov-report=term-missing --cov-fail-under=90"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
