@@ -68,3 +68,25 @@ def test_result_can_be_serialized() -> None:
     assert payload["score"] == 0
     assert payload["urls_analyzed"] == 0
     assert payload["indicators"] == ()
+
+
+def test_ipv6_links_keep_the_closing_bracket() -> None:
+    for text in ("https://[::1]", "[https://[2001:db8::1]]", "https://[::1]."):
+        result = analyze_email(text)
+        assert result.urls_analyzed == 1
+        assert {item.code for item in result.indicators} == {"ip_address_host"}
+
+
+def test_malformed_links_do_not_abort_other_analysis() -> None:
+    for bad_url in ("https://[broken", "https://[not-an-ip]", "https://?query"):
+        result = analyze_email(f"urgent {bad_url} https://bit.ly/example")
+        assert result.urls_analyzed == 2
+        assert {item.code for item in result.indicators} == {
+            "urgency", "malformed_url", "shortened_url",
+        }
+
+
+def test_repeated_malformed_links_do_not_multiply_weight() -> None:
+    result = analyze_email("https://[broken https://[invalid")
+    assert result.score == 12
+    assert [item.code for item in result.indicators] == ["malformed_url"]
