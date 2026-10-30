@@ -111,9 +111,14 @@ def _language_indicators(text: str) -> list[Indicator]:
 
 
 def _extract_urls(text: str) -> tuple[str, ...]:
-    return tuple(
-        match.group(0).rstrip(".,;:!?)]}") for match in URL_PATTERN.finditer(text)
-    )
+    urls: list[str] = []
+    for match in URL_PATTERN.finditer(text):
+        url = match.group(0).rstrip(".,;:!?)}")
+        # Preserve an IPv6 host's closing bracket, but remove wrapping brackets.
+        while url.endswith("]") and url.count("]") > url.count("["):
+            url = url[:-1]
+        urls.append(url)
+    return tuple(urls)
 
 
 def _is_ip_address(hostname: str) -> bool:
@@ -127,8 +132,17 @@ def _is_ip_address(hostname: str) -> bool:
 def _url_indicators(urls: tuple[str, ...]) -> list[Indicator]:
     evidence: dict[str, tuple[str, int, str]] = {}
     for url in urls:
-        parsed = urlsplit(url)
-        hostname = (parsed.hostname or "").casefold().rstrip(".")
+        try:
+            parsed = urlsplit(url)
+            hostname = (parsed.hostname or "").casefold().rstrip(".")
+            if not hostname:
+                raise ValueError("Missing URL hostname")
+        except ValueError:
+            evidence.setdefault(
+                "malformed_url",
+                ("Malformed URL", 12, "A link could not be parsed; inspect it manually."),
+            )
+            continue
         if parsed.scheme.casefold() == "http":
             evidence.setdefault(
                 "cleartext_http",
