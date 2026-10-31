@@ -140,7 +140,11 @@ def _url_indicators(urls: tuple[str, ...]) -> list[Indicator]:
         except ValueError:
             evidence.setdefault(
                 "malformed_url",
-                ("Malformed URL", 12, "A link could not be parsed; inspect it manually."),
+                (
+                    "Malformed URL",
+                    12,
+                    "A link could not be parsed; inspect it manually.",
+                ),
             )
             continue
         if parsed.scheme.casefold() == "http":
