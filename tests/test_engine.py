@@ -82,7 +82,9 @@ def test_malformed_links_do_not_abort_other_analysis() -> None:
         result = analyze_email(f"urgent {bad_url} https://bit.ly/example")
         assert result.urls_analyzed == 2
         assert {item.code for item in result.indicators} == {
-            "urgency", "malformed_url", "shortened_url",
+            "urgency",
+            "malformed_url",
+            "shortened_url",
         }
 
 
